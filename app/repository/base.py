@@ -35,14 +35,14 @@ class BaseRepository:
             return instance
 
     @classmethod
-    async def update(cls, id, data):
+    async def update(cls, id, data: dict):
         async with async_session() as session:
             query = select(cls.model).filter_by(id=id)
             result = await session.execute(query)
             instance = result.scalar_one_or_none()
             if not instance:
-                return {'message': 'Post not found'}
-            for key, value in data.dict().items():
+                return None
+            for key, value in data.items():
                 setattr(instance, key, value)
             session.add(instance)
             await session.commit()

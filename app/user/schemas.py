@@ -20,3 +20,9 @@ class SUUser(BaseModel):
 
 class SRUser(SGUser):
     id: int
+
+
+class SAuth(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
