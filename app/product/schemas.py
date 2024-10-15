@@ -1,83 +1,83 @@
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel
+from typing import List
+
+from app.user.schemas import SRUser
 
 
 class SGProduct(BaseModel):
-    id: int
     name: str
     price: float
     description: str
     quantity: int
     product_image: str
 
-    basket_items: List
 
-
-class SCProduct(BaseModel):
-    name: str
-    price: float
-    description: str
-    quantity: int
-    product_image: str
+class SCProduct(SGProduct):
+    pass  # Все поля обязательны при создании
+    # Можно и убрать, но и веса особого не имеет, так что можно оставить
 
 
 class SUProduct(BaseModel):
+    name: str | None
+    price: float | None
+    description: str | None
+    quantity: int | None
+    product_image: str | None
+
+
+class SRProduct(SGProduct):
     id: int
-    name: str
+
+# Product
+# ---------------------------------------------------------------------------------------------------------------------
+
+
+class SGBasketItem(BaseModel):
     price: float
-    description: str
     quantity: int
-    product_image: str
 
 
-class SDProduct(BaseModel):
+class SCBasketItem(SGBasketItem):
+    product_id: int
+    basket_id: int
+
+
+class SUBasketItem(BaseModel):
+    price: float | None
+    quantity: int | None
+
+
+class SRBasketItem(SGBasketItem):
     id: int
+    product: SRProduct
+
+
+# BasketItem
+# ---------------------------------------------------------------------------------------------------------------------
 
 
 class SGBasket(BaseModel):
-    id: int
-    created_at: datetime
-    price: float
+    total_price: float
     active_status: bool
 
+
+class SCBasket(SGBasket):
     user_id: int
 
-    basket_items: List
+
+class SUBasket(BaseModel):
+    total_price: float | None
+    active_status: bool | None
 
 
-class SCBasket(BaseModel):
+class SRBasket(SGBasket):
     id: int
-    price: float
-
-
-
-class SBasket(BaseModel):
-    id: int | None
     created_at: datetime
-    price: float
-    active_status: bool
+    basket_items: List[SRBasketItem] = []
+    user: SRUser
 
-    user_id: int
 
-    basket_items: List
-
-class SBasket(BaseModel):
-    id: int | None
-    created_at: datetime
-    price: float
-    active_status: bool
-
-    user_id: int
-
-    basket_items: List
-
-class SBasketItem(BaseModel):
-    id: int
-    price: float
-    quantity: int
-
-    basket_id: int
-
-    product_id: int
+# Basket
+# ---------------------------------------------------------------------------------------------------------------------

@@ -14,4 +14,6 @@ class User(Base):
     profile_picture: Mapped[str] = mapped_column(String)
 
     # One to many
-    baskets: Mapped[List["Basket"]] = relationship("Basket", back_populates="user")
+    baskets: Mapped[List["Basket"]] = relationship(
+        "Basket", back_populates="user", cascade="all, delete-orphan"
+    )

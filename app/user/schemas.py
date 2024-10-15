@@ -1,31 +1,22 @@
-from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class SGUser(BaseModel):
-    id: int
     name: str
-    email: str
-    hashed_password: str
-    profile_picture: str
-
-    baskets: List
-
-
-class SCUser(BaseModel):
-    name: str
-    email: str
-    hashed_password: str
+    email: EmailStr
     profile_picture: str | None
+
+
+class SCUser(SGUser):
+    password: str
 
 
 class SUUser(BaseModel):
-    id: int
-    name: str
-    email: str
-    hashed_password: str
+    name: str | None
+    email: EmailStr | None
     profile_picture: str | None
+    password: str | None
 
 
-class SDUser(BaseModel):
+class SRUser(SGUser):
     id: int

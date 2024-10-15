@@ -16,7 +16,9 @@ class Product(Base):
     product_image: Mapped[str] = mapped_column(String)
 
     # One to many
-    basket_items: Mapped[List["BasketItem"]] = relationship("BasketItem", back_populates="product")
+    basket_items: Mapped[List["BasketItem"]] = relationship(
+        "BasketItem", back_populates="product", cascade="nullify"
+    )
 
 
 class Basket(Base):
@@ -25,12 +27,18 @@ class Basket(Base):
     total_price: Mapped[float] = mapped_column(Float)
     active_status: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    # One to many
-    user: Mapped["User"] = relationship("User", back_populates="baskets")
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
+    # Many to one
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    user: Mapped["User"] = relationship(
+        "User", back_populates="baskets", cascade="all, delete-orphan"
+    )
 
     # One to many
-    basket_items: Mapped[List["BasketItem"]] = relationship("BasketItem", back_populates="basket")
+    basket_items: Mapped[List["BasketItem"]] = relationship(
+        "BasketItem", back_populates="basket", cascade="all, delete-orphan"
+    )
 
 
 class BasketItem(Base):
@@ -38,10 +46,14 @@ class BasketItem(Base):
     price: Mapped[float] = mapped_column(Float)
     quantity: Mapped[int] = mapped_column(Integer)
 
-    # One to many
+    # Many to one
+    basket_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("baskets.id", ondelete="CASCADE"), nullable=False
+    )
     basket: Mapped["Basket"] = relationship("Basket", back_populates="basket_items")
-    basket_id: Mapped[int] = mapped_column(Integer, ForeignKey("baskets.id"))
 
-    # One to many
+    # Many to one
+    product_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("products.id", ondelete="SET NULL"), nullable=True
+    )
     product: Mapped["Product"] = relationship("Product", back_populates="basket_items")
-    product_id: Mapped[int] = mapped_column(Integer, ForeignKey("products.id"))
