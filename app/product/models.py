@@ -29,7 +29,7 @@ class Basket(Base):
 
     # Many to one
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("users.id", ondelete="CASCADE"),
     )
     user: Mapped["User"] = relationship("User", back_populates="baskets")
 
