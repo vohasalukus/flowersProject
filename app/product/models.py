@@ -17,7 +17,7 @@ class Product(Base):
 
     # One to many
     basket_items: Mapped[List["BasketItem"]] = relationship(
-        "BasketItem", back_populates="product", cascade="nullify"
+        "BasketItem", back_populates="product", passive_deletes=True
     )
 
 
@@ -31,9 +31,8 @@ class Basket(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    user: Mapped["User"] = relationship(
-        "User", back_populates="baskets", cascade="all, delete-orphan"
-    )
+    user: Mapped["User"] = relationship("User", back_populates="baskets")
+
 
     # One to many
     basket_items: Mapped[List["BasketItem"]] = relationship(
@@ -56,4 +55,6 @@ class BasketItem(Base):
     product_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="SET NULL"), nullable=True
     )
-    product: Mapped["Product"] = relationship("Product", back_populates="basket_items")
+    product: Mapped["Product"] = relationship(
+        "Product", back_populates="basket_items", passive_deletes=True
+    )

@@ -1,2 +1,2 @@
-from user.models import *
-from product.models import *
+from app.user.models import *
+from app.product.models import *
