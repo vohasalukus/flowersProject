@@ -15,7 +15,7 @@ class SUUser(BaseModel):
     name: str | None
     email: EmailStr | None
     profile_picture: str | None
-    password: str | None
+    password: str
 
 
 class SRUser(SGUser):

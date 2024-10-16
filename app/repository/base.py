@@ -1,9 +1,23 @@
-from sqlalchemy import select
+from typing import List
+
+from sqlalchemy import select, func
+from sqlalchemy.orm import joinedload
+
 from app.database import async_session
 
 
 class BaseRepository:
     model = None
+
+    @classmethod
+    def build_joinedload(cls, include: str):
+        parts = include.split('.')
+        option = joinedload(getattr(cls, parts[0]))
+        current_class = cls
+        for i in range(len(parts)-1):
+            current_class = getattr(current_class, parts[i]).property.mapper.class_
+            option = option.joinedload(getattr(current_class, parts[i+1]))
+        return option
 
     @classmethod
     async def get_all(cls):
@@ -58,3 +72,25 @@ class BaseRepository:
             session.delete(instance)
             await session.commit()
             return {'message': f'Post {id} deleted'}
+
+    @classmethod
+    async def paginate(cls, page: int, limit: int, filter=None, includes: List[str] = None):
+        async with async_session() as session:
+            query = select(cls).limit(limit).offset((page - 1) * limit)
+            if includes:
+                for include in includes:
+                    query = query.options(cls.build_joinedload(include))
+            if filter is not None:
+                query = query.filter(filter)
+            result = await session.execute(query)
+            return result.unique().scalars().all()
+
+    @classmethod
+    async def count(cls, filter=None):
+        async with async_session() as session:
+            if filter is not None:
+                query = select(func.count(cls.id)).filter(filter)
+            else:
+                query = select(func.count(cls.id))
+            result = await session.execute(query)
+            return result.scalar()

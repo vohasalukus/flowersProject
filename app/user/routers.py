@@ -1,13 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response
+from sqlalchemy.future import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_session
 from app.user.auth import get_hashed_password, verify_password, create_access_token
 from app.user.dependencies import get_current_user
 from app.user.models import User
 from app.user.repository import UserRepository
-from app.user.schemas import SRUser, SCUser, SAuth
+from app.user.schemas import SRUser, SCUser, SAuth, SUUser
 
 router = APIRouter(
-    prefix="/auth",
-    tags=["Authorization"],
+    prefix="/user",
+    tags=["Users"],
 )
 
 
@@ -47,3 +51,34 @@ async def login(data: SAuth, response: Response):
 @router.get("/current-user", response_model=SRUser)
 async def get_current_user_route(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.put("/update_user", response_model=SRUser)
+async def update_user(
+    user_update: SUUser,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    query = select(User).filter(User.id == current_user.id)
+    result = await session.execute(query)
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    user_data = user_update.dict(exclude_unset=True)
+    if "password" in user_data:
+
+        user_data["hashed_password"] = get_hashed_password(user_data.pop("password"))
+
+    for key, value in user_data.items():
+        setattr(user, key, value)
+
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    return user
