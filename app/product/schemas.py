@@ -30,6 +30,9 @@ class SUProduct(BaseModel):
 class SRProduct(SGProduct):
     id: int
 
+    class Config:
+        from_attributes = True
+
 # Product
 # ---------------------------------------------------------------------------------------------------------------------
 

@@ -1,6 +1,7 @@
 from typing import List
 
 from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.database import async_session
@@ -64,19 +65,24 @@ class BaseRepository:
             return instance
 
     @classmethod
-    async def destroy(cls, id):
-        async with async_session() as session:
-            query = select(cls.model).filter_by(id=id)
-            result = await session.execute(query)
-            instance = result.scalar()
-            session.delete(instance)
-            await session.commit()
-            return {'message': f'Post {id} deleted'}
+    async def destroy(cls, id, session: AsyncSession):
+        query = select(cls.model).filter_by(id=id)
+        result = await session.execute(query)
+        instance = result.scalar_one_or_none()
+
+        if not instance:
+            return None
+
+        await session.delete(instance)
+        await session.commit()
+        return {
+            "message": "Successfully deleted"
+        }
 
     @classmethod
     async def paginate(cls, page: int, limit: int, filter=None, includes: List[str] = None):
         async with async_session() as session:
-            query = select(cls).limit(limit).offset((page - 1) * limit)
+            query = select(cls.model).limit(limit).offset((page - 1) * limit)
             if includes:
                 for include in includes:
                     query = query.options(cls.build_joinedload(include))
@@ -89,8 +95,8 @@ class BaseRepository:
     async def count(cls, filter=None):
         async with async_session() as session:
             if filter is not None:
-                query = select(func.count(cls.id)).filter(filter)
+                query = select(func.count(cls.model.id)).filter(filter)
             else:
-                query = select(func.count(cls.id))
+                query = select(func.count(cls.model.id))
             result = await session.execute(query)
             return result.scalar()
