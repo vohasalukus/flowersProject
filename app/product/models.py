@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import Integer, String, Float, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy import Integer, String, Float, Text, DateTime, Boolean, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -23,7 +23,7 @@ class Product(Base):
 
 class Basket(Base):
 
-    created_at: Mapped[datetime] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     total_price: Mapped[float] = mapped_column(Float)
     active_status: Mapped[bool] = mapped_column(Boolean, default=True)
 

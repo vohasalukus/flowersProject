@@ -42,12 +42,12 @@ class BaseRepository:
             return result.scalar_one_or_none()
 
     @classmethod
-    async def create(cls, **data):
-        async with async_session() as session:
-            instance = cls.model(**data)
-            session.add(instance)
-            await session.commit()
-            return instance
+    async def create(cls, session: AsyncSession, **data):
+        instance = cls.model(**data)
+        session.add(instance)
+        await session.commit()
+        await session.refresh(instance)
+        return instance
 
     @classmethod
     async def update(cls, id, data: dict):

@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,7 +5,7 @@ from app.database import get_session
 from app.product.repository import ProductRepository
 from app.product.schemas import SCProduct, SRProduct, SUProduct
 from app.repository.schemas import SBaseListResponse
-from app.repository.tools import get_list_data
+
 from app.user.dependencies import get_current_user
 
 router = APIRouter(
