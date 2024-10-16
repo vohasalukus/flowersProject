@@ -82,3 +82,27 @@ async def update_user(
     await session.refresh(user)
 
     return user
+
+
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+
+    query = select(User).filter(User.id == current_user.id)
+    result = await session.execute(query)
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found or already deleted"
+        )
+
+    await session.delete(user)
+    await session.commit()
+
+    return {
+        "message": "Successfully deleted"
+    }
