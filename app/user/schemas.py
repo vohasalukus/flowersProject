@@ -21,6 +21,9 @@ class SUUser(BaseModel):
 class SRUser(SGUser):
     id: int
 
+    class Config:
+        from_attributes = True
+
 
 class SAuth(BaseModel):
     username: str

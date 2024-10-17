@@ -56,6 +56,8 @@ class SRBasketItem(SGBasketItem):
     id: int
     product: SRProduct
 
+    class Config:
+        from_attributes = True
 
 # BasketItem
 # ---------------------------------------------------------------------------------------------------------------------
@@ -81,6 +83,8 @@ class SRBasket(SGBasket):
     basket_items: List[SRBasketItem] = []
     user: SRUser
 
+    class Config:
+        from_attributes = True
 
 # Basket
 # ---------------------------------------------------------------------------------------------------------------------
