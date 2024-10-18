@@ -17,10 +17,17 @@ router = APIRouter(
 @router.post("/", response_model=SRProduct, status_code=status.HTTP_201_CREATED)
 async def create_product(
     product_data: SCProduct,
+    session: AsyncSession = Depends(get_session),
     current_user: str = Depends(get_current_user)
 ):
-    new_product = await ProductRepository.create(**product_data.dict())
-    return new_product
+    """
+    Создание нового продукта.
+    """
+    new_product = await ProductRepository.create(
+        session=session,
+        **product_data.dict()
+    )
+    return SRProduct.from_orm(new_product)
 
 
 @router.get("/", response_model=SBaseListResponse)
@@ -28,7 +35,9 @@ async def get_all_products(
     page: int = 1,
     limit: int = 10
 ):
-
+    """
+    Получения всех продуктов. Доступно неавторизованным пользователям
+    """
     products = await ProductRepository.paginate(page=page, limit=limit)
     total = await ProductRepository.count()
 
@@ -46,6 +55,9 @@ async def get_product(
     product_id: int,
     session: AsyncSession = Depends(get_session)
 ):
+    """
+    Получения продукта по его id. Доступно неавторизованным пользователям
+    """
     product = await ProductRepository.get_by_id(product_id)
     if not product:
         raise HTTPException(
@@ -62,6 +74,9 @@ async def update_product(
     session: AsyncSession = Depends(get_session),
     current_user: str = Depends(get_current_user)
 ):
+    """
+    Редактирования продукта
+    """
     updated_product = await ProductRepository.update(product_id, product_update.dict(exclude_unset=True))
     if not updated_product:
         raise HTTPException(
@@ -77,7 +92,9 @@ async def delete_product(
     session: AsyncSession = Depends(get_session),
     current_user: str = Depends(get_current_user)
 ):
-
+    """
+    Удаление продукта
+    """
     delete_result = await ProductRepository.destroy(product_id, session)
 
     if delete_result is None:

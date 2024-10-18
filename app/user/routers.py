@@ -16,23 +16,30 @@ router = APIRouter(
 
 
 @router.post("/register", response_model=SRUser, status_code=status.HTTP_201_CREATED)
-async def register_user(data: SCUser):
+async def register_user(data: SCUser, session: AsyncSession = Depends(get_session)):
+    """
+    Регистрация аккаунта
+    """
     existing_user = await UserRepository.get_by(email=data.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed_password = get_hashed_password(data.password)
     user = await UserRepository.create(
+        session=session,
         name=data.name,
         email=data.email,
         hashed_password=hashed_password,
         profile_picture=data.profile_picture,
     )
-    return user
+    return SRUser.from_orm(user)
 
 
 @router.post("/login")
 async def login(data: SAuth, response: Response):
+    """
+    Вход в свой аккаунт
+    """
     user = await UserRepository.get_by(email=data.email)
     if user is None or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
@@ -50,6 +57,9 @@ async def login(data: SAuth, response: Response):
 
 @router.get("/current-user", response_model=SRUser)
 async def get_current_user_route(current_user: User = Depends(get_current_user)):
+    """
+    Получение текущего пользователя
+    """
     return current_user
 
 
@@ -59,6 +69,9 @@ async def update_user(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
+    """
+    Редактирование юзера
+    """
     query = select(User).filter(User.id == current_user.id)
     result = await session.execute(query)
     user = result.scalar_one_or_none()
@@ -89,7 +102,9 @@ async def delete_user(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-
+    """
+    Автоматически удаляет текущего пользователя
+    """
     query = select(User).filter(User.id == current_user.id)
     result = await session.execute(query)
     user = result.scalar_one_or_none()
@@ -105,4 +120,15 @@ async def delete_user(
 
     return {
         "message": "Successfully deleted"
+    }
+
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout(response: Response):
+    """
+    Выход с аккаунта текущего пользователя, удаление cookie с токеном.
+    """
+    response.delete_cookie("token")
+    return {
+        "message": "User logged out successfully"
     }
