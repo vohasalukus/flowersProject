@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr
+from typing_extensions import Optional
 
 
 class SGUser(BaseModel):
@@ -11,11 +12,13 @@ class SCUser(SGUser):
     password: str
 
 
-class SUUser(BaseModel):
-    name: str | None
-    email: EmailStr | None
-    profile_picture: str | None
-    password: str
+class SUUserUpdate(BaseModel):
+    name: Optional[str]
+    email: Optional[EmailStr]
+    password: Optional[str]
+
+    class Config:
+        orm_mode = True
 
 
 class SRUser(SGUser):

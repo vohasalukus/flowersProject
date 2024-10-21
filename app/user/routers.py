@@ -7,7 +7,7 @@ from app.user.auth import get_hashed_password, verify_password, create_access_to
 from app.user.dependencies import get_current_user
 from app.user.models import User
 from app.user.repository import UserRepository
-from app.user.schemas import SRUser, SCUser, SAuth, SUUser
+from app.user.schemas import SRUser, SCUser, SAuth, SUUserUpdate
 
 router = APIRouter(
     prefix="/user",
@@ -52,7 +52,7 @@ async def login(data: SAuth, response: Response):
         secure=True,
         samesite="lax",
     )
-    return {"message": "Successfully logged in"}
+    return {"message": "Successfully logged in", "auth_token": token}
 
 
 @router.get("/current-user", response_model=SRUser)
@@ -63,16 +63,25 @@ async def get_current_user_route(current_user: User = Depends(get_current_user))
     return current_user
 
 
-@router.put("/update_user", response_model=SRUser)
+@router.put("/update_user/{user_id}", response_model=SRUser)
 async def update_user(
-    user_update: SUUser,
+    user_id: int,
+    user_update: SUUserUpdate,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
     """
-    Редактирование юзера
+    Обновление данных пользователя
     """
-    query = select(User).filter(User.id == current_user.id)
+    # Проверка, чтобы пользователь мог обновить только свои данные
+    if current_user.id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden to update another user's data"
+        )
+
+    # Получение пользователя по id
+    query = select(User).filter(User.id == user_id)
     result = await session.execute(query)
     user = result.scalar_one_or_none()
 
@@ -82,9 +91,9 @@ async def update_user(
             detail="User not found"
         )
 
+    # Обновляем только те поля, которые указаны в запросе
     user_data = user_update.dict(exclude_unset=True)
     if "password" in user_data:
-
         user_data["hashed_password"] = get_hashed_password(user_data.pop("password"))
 
     for key, value in user_data.items():
@@ -94,7 +103,7 @@ async def update_user(
     await session.commit()
     await session.refresh(user)
 
-    return user
+    return SRUser.from_orm(user)
 
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
