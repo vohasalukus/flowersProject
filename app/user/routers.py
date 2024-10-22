@@ -30,7 +30,6 @@ async def register_user(data: SCUser, session: AsyncSession = Depends(get_sessio
         name=data.name,
         email=data.email,
         hashed_password=hashed_password,
-        profile_picture=data.profile_picture,
     )
     return SRUser.from_orm(user)
 
